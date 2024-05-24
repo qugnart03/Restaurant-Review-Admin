@@ -94,19 +94,19 @@ const UserComponent = () => {
   //--------------------------------------------------------------//
 
   //--------------------------------------------------------------//
-  const handleDelete = async (id) => {
-    try {
-      await axios.delete(`http://localhost:8080/api/admin/delete/user/${id}`, {
-        withCredentials: true,
-      });
+  // const handleDelete = async (id) => {
+  //   try {
+  //     await axios.delete(`http://localhost:8080/api/admin/delete/user/${id}`, {
+  //       withCredentials: true,
+  //     });
 
-      setCurrentUser(currentUser.filter((restaurant) => restaurant._id !== id));
+  //     setCurrentUser(currentUser.filter((restaurant) => restaurant._id !== id));
 
-      toast.success("Restaurant deleted successfully");
-    } catch (error) {
-      console.error("Error deleting restaurant:", error);
-    }
-  };
+  //     toast.success("Restaurant deleted successfully");
+  //   } catch (error) {
+  //     console.error("Error deleting restaurant:", error);
+  //   }
+  // };
   //--------------------------------------------------------------//
 
   //--------------------------------------------------------------//
@@ -184,6 +184,8 @@ const UserComponent = () => {
       setUsers(updatedUsers);
 
       toggleModalCancel();
+
+      toast.success("Update user " + name + " success");
     } catch (error) {
       console.error("Error submitting data:", error);
     }
@@ -275,12 +277,12 @@ const UserComponent = () => {
                     >
                       Edit
                     </Button>
-                    <Button
+                    {/* <Button
                       color="danger"
                       onClick={() => handleDelete(tdata._id)}
                     >
                       Delete
-                    </Button>
+                    </Button> */}
                   </td>
                 </tr>
               ))}

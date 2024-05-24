@@ -33,7 +33,6 @@ const RestaurantTable = () => {
   const [phone, setPhone] = useState("");
   const [description, setDescription] = useState("");
   const [address, setAddress] = useState("");
-  const [status, setStatus] = useState(true);
   const [image, setImage] = useState(null);
   const [urlImage, setUrlImage] = useState("");
   const [time, setTime] = useState("");
@@ -126,6 +125,13 @@ const RestaurantTable = () => {
 
   //--------------------------------------------------------------//
 
+  const formatTime = (time) => {
+    const [hours, minutes] = time.split(":");
+    const hoursInt = parseInt(hours);
+    const formattedHours = hoursInt < 10 ? `0${hoursInt}` : hoursInt.toString();
+    return `${formattedHours}:${minutes}`;
+  };
+
   //--------------------------------------------------------------//
 
   const toggleModal = (idRestaurant) => {
@@ -150,7 +156,6 @@ const RestaurantTable = () => {
         phone,
         description,
         address,
-        status,
         timeWork: { start, end },
         image: { url },
       } = restaurantToEdit;
@@ -160,9 +165,9 @@ const RestaurantTable = () => {
       setType(type);
       setPhone(phone);
       setDescription(description);
-      setStatus(status);
-      setStartTime(start);
-      setEndTime(end);
+
+      setStartTime(formatTime(start));
+      setEndTime(formatTime(end));
       setUrlImage(url);
     }
   };
@@ -172,7 +177,7 @@ const RestaurantTable = () => {
   };
   console.log(restaurants);
   const handleSubmit = async () => {
-    if (!name || !type || !phone || !description || !address || !status) {
+    if (!name || !type || !phone || !description || !address) {
       console.log("Please fill all the fields");
       return;
     }
@@ -184,7 +189,6 @@ const RestaurantTable = () => {
     formData.append("address", address);
     formData.append("timeWork", time);
     formData.append("phone", phone);
-    formData.append("status", status);
     formData.append("image", image);
     try {
       const { data } = await axios.put(
@@ -206,20 +210,15 @@ const RestaurantTable = () => {
           phone: phone,
           description: description,
           address: address,
-          status: status,
           timeWork: {
             start: startTime,
             end: endTime,
           },
-
-          image: {
-            url: data.url, // Cập nhật đường dẫn hình ảnh mới
-          },
         };
-
-        console.log(image.url);
       }
       toggleModalCancel();
+
+      toast.success("Update " + name + " success");
     } catch (error) {
       console.error("Error submitting data:", error);
     }
@@ -243,11 +242,10 @@ const RestaurantTable = () => {
   const handleTimeChange = (e) => {
     const { id, value } = e.target;
     if (id === "startTime") {
-      setStartTime(value);
+      setStartTime(formatTime(value));
     } else if (id === "endTime") {
-      setEndTime(value);
+      setEndTime(formatTime(value));
     }
-
     setTime(startTime + " - " + endTime);
   };
 
@@ -577,32 +575,6 @@ const RestaurantTable = () => {
               />
 
               {urlImage && <img src={urlImage} className="w-25 pt-3 h-40" />}
-            </FormGroup>
-
-            <Label for="statusRes">Status</Label>
-            <FormGroup className="d-flex " tag="fieldset">
-              <FormGroup check>
-                <Input
-                  name="statusRes"
-                  type="radio"
-                  value="true"
-                  onChange={(e) => setStatus(e.target.value)}
-                />
-                <Label check className="form-label">
-                  Pending
-                </Label>
-              </FormGroup>
-              <FormGroup className="mx-4" check>
-                <Input
-                  name="statusRes"
-                  type="radio"
-                  value="false"
-                  onChange={(e) => setStatus(e.target.value)}
-                />
-                <Label check className="form-label">
-                  Suspending
-                </Label>
-              </FormGroup>
             </FormGroup>
           </Form>
         </ModalBody>

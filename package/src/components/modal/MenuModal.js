@@ -12,6 +12,7 @@ import {
   Label,
   Input,
 } from "reactstrap";
+import { ToastContainer, toast } from "react-toastify";
 
 const MenuModal = ({ isOpen, toggle, restaurantId }) => {
   const [menuItems, setMenuItems] = useState([]);
@@ -74,6 +75,7 @@ const MenuModal = ({ isOpen, toggle, restaurantId }) => {
       );
       fetchMenu();
       toggleMenuModal();
+      toast.success("Delete item success");
     } catch (error) {
       console.error("Error deleting menu item:", error);
     }
@@ -98,6 +100,8 @@ const MenuModal = ({ isOpen, toggle, restaurantId }) => {
       );
       fetchMenu();
       toggleMenuModal();
+
+      toast.success("Update menu success");
     } catch (error) {
       console.error("Error updating menu item:", error);
     }
@@ -118,6 +122,7 @@ const MenuModal = ({ isOpen, toggle, restaurantId }) => {
 
   return (
     <div>
+      <ToastContainer />
       <Modal className="modal-lg" isOpen={isOpen} onClick={toggle}>
         <ModalHeader>Menu</ModalHeader>
         <ModalBody>

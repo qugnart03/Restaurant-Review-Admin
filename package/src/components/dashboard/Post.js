@@ -27,7 +27,6 @@ const Post = (props) => {
           <CardSubtitle>{props.createAt}</CardSubtitle>
         </div>
         <CardTitle className="mt-2">{props.content}</CardTitle>
-        <Button color="primary">Read More</Button>
       </CardBody>
     </Card>
   );
