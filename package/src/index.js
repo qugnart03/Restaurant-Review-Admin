@@ -6,18 +6,21 @@ import App from "./App";
 import reportWebVitals from "./reportWebVitals";
 import { HashRouter } from "react-router-dom";
 import Loader from "./layouts/loader/Loader";
+import { RestaurantProvider, UserProvider } from "./contexts/RestaurantContext";
 
 const rootElement = document.getElementById("root");
 const root = createRoot(rootElement);
 
 root.render(
-  <Suspense fallback={<Loader />}>
-    <HashRouter>
-      <App />
-    </HashRouter>
-  </Suspense>
-
-  // document.getElementById("root")
+  <RestaurantProvider>
+    <UserProvider>
+      <Suspense fallback={<Loader />}>
+        <HashRouter>
+          <App />
+        </HashRouter>
+      </Suspense>
+    </UserProvider>
+  </RestaurantProvider>
 );
 
 // If you want to start measuring performance in your app, pass a function

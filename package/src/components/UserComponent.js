@@ -17,8 +17,10 @@ import {
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 
+import { useUser } from "../contexts/RestaurantContext";
+import { ToastContainer, toast } from "react-toastify";
+
 const UserComponent = () => {
-  const [tableData, setTableData] = useState([]);
   const [modal, setModal] = useState(false);
   const [id, setId] = useState(null);
   const [name, setName] = useState("");
@@ -28,69 +30,86 @@ const UserComponent = () => {
   const [urlImage, setUrlImage] = useState("");
   const [role, setRole] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
+
+  const [users, setUsers] = useUser();
+
+  const [currentUser, setCurrentUser] = useState(users);
+  //--------------------------------------------------------------//
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5;
-
-  const handleSearch = async () => {
-    try {
-      const { data } = await axios.get(
-        `http://localhost:8080/api/search/user/${searchTerm}`,
-        {
-          withCredentials: true,
-        }
-      );
-      if (data?.users) {
-        setTableData(data.users);
-      }
-    } catch (error) {
-      console.error("Error searching users:", error);
-    }
-  };
-
-  useEffect(() => {
-    if (searchTerm.trim() === "") {
-      fetchUsers();
-      // setTableData([]);
-    } else {
-      handleSearch(searchTerm);
-    }
-  }, [searchTerm]);
+  const itemsPerPage = 6;
 
   const getCurrentItems = () => {
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-    return tableData.slice(indexOfFirstItem, indexOfLastItem);
+    return currentUser.slice(indexOfFirstItem, indexOfLastItem);
   };
+
+  useEffect(() => {
+    setCurrentUser(users);
+  }, [users]);
 
   const goToPage = (page) => {
     setCurrentPage(page);
   };
 
   const pageNumbers = [];
-  for (let i = 1; i <= Math.ceil(tableData.length / itemsPerPage); i++) {
+  for (let i = 1; i <= Math.ceil(currentUser.length / itemsPerPage); i++) {
     pageNumbers.push(i);
   }
 
-  const fetchUsers = async () => {
+  //--------------------------------------------------------------//
+
+  //--------------------------------------------------------------//
+  const [initialUser, setInitialUser] = useState([]);
+
+  useEffect(() => {
+    setInitialUser(users);
+  }, [users]);
+
+  const handleSearch = async (searchTerm) => {
     try {
-      const { data } = await axios.get(
-        "http://localhost:8080/api/admin/show/user",
-        {
-          withCredentials: true,
-        }
-      );
-      if (data?.users) {
-        setTableData(data.users);
+      if (!searchTerm.trim()) {
+        setCurrentUser(users);
+        setCurrentPage(1);
+        return;
       }
+
+      const filteredUsers = [...initialUser];
+
+      const filteredResults = filteredUsers.filter((user) =>
+        user.name.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+
+      setCurrentUser(filteredResults);
+      setCurrentPage(1);
     } catch (error) {
-      console.error("Error fetching restaurants:", error);
+      console.error("Error searching restaurants:", error);
     }
   };
 
   useEffect(() => {
-    fetchUsers();
-  }, [currentPage]);
+    handleSearch(searchTerm);
+  }, [searchTerm]);
 
+  //--------------------------------------------------------------//
+
+  //--------------------------------------------------------------//
+  const handleDelete = async (id) => {
+    try {
+      await axios.delete(`http://localhost:8080/api/admin/delete/user/${id}`, {
+        withCredentials: true,
+      });
+
+      setCurrentUser(currentUser.filter((restaurant) => restaurant._id !== id));
+
+      toast.success("Restaurant deleted successfully");
+    } catch (error) {
+      console.error("Error deleting restaurant:", error);
+    }
+  };
+  //--------------------------------------------------------------//
+
+  //--------------------------------------------------------------//
   const toggleModal = (id) => {
     setId(id);
     setModal(!modal);
@@ -99,30 +118,20 @@ const UserComponent = () => {
 
   const toggleModalCancel = () => {
     setModal(!modal);
-    setEmail("");
-    setName("");
-    setPhone("");
-    setRole("");
-    setUrlImage("");
   };
 
   const loadDataModal = async (id) => {
     try {
-      const { data } = await axios.get(
-        `http://localhost:8080/api/admin/show/user/${id}`,
-        {
-          withCredentials: true,
-        }
-      );
+      const userToEdit = users.find((user) => user._id === id);
 
-      if (data?.success) {
+      if (userToEdit) {
         const {
           email,
           name,
           phone,
           role,
           image: { url },
-        } = data.user;
+        } = userToEdit;
 
         setEmail(email !== null ? email : "");
         setName(name != null ? name : "");
@@ -132,17 +141,6 @@ const UserComponent = () => {
       }
     } catch (error) {
       console.error("Error submitting data:", error);
-    }
-  };
-
-  const handleDelete = async (id) => {
-    try {
-      await axios.delete(`http://localhost:8080/api/admin/delete/user/${id}`, {
-        withCredentials: true,
-      });
-      fetchUsers();
-    } catch (error) {
-      console.error("Error deleting restaurant:", error);
     }
   };
 
@@ -171,7 +169,20 @@ const UserComponent = () => {
         }
       );
 
-      fetchUsers();
+      const updatedUsers = [...users];
+
+      const index = updatedUsers.findIndex((user) => user._id === id);
+      if (index !== -1) {
+        updatedUsers[index] = {
+          ...updatedUsers[index],
+          name: name,
+          phone: phone,
+          role: role,
+        };
+      }
+
+      setUsers(updatedUsers);
+
       toggleModalCancel();
     } catch (error) {
       console.error("Error submitting data:", error);
@@ -193,6 +204,7 @@ const UserComponent = () => {
 
   return (
     <div>
+      <ToastContainer />
       <Card>
         <CardBody>
           <CardTitle tag="h5">Restaurant Listing</CardTitle>
@@ -307,7 +319,7 @@ const UserComponent = () => {
               {/* Next Page Button */}
               <li
                 className={`page-item ${
-                  currentPage === Math.ceil(tableData.length / itemsPerPage)
+                  currentPage === Math.ceil(currentUser.length / itemsPerPage)
                     ? "disabled"
                     : ""
                 }`}

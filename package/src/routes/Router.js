@@ -1,5 +1,7 @@
+import React from "react";
 import { lazy } from "react";
 import { Navigate } from "react-router-dom";
+import { RestaurantProvider } from "../contexts/RestaurantContext.js";
 
 /****Layouts*****/
 const FullLayout = lazy(() => import("../layouts/FullLayout.js"));
@@ -16,7 +18,11 @@ const DashBoardScreen = lazy(() => import("../views/DashBoardScreen.js"));
 const ThemeRoutes = [
   {
     path: "/",
-    element: <FullLayout />,
+    element: (
+      <RestaurantProvider>
+        <FullLayout />
+      </RestaurantProvider>
+    ),
     children: [
       { path: "/", element: <Navigate to="/auth" /> },
       { path: "/dashboard", exact: true, element: <DashBoardScreen /> },
@@ -27,7 +33,11 @@ const ThemeRoutes = [
   },
   {
     path: "/",
-    element: <AuthLayout />,
+    element: (
+      <RestaurantProvider>
+        <AuthLayout />
+      </RestaurantProvider>
+    ),
     children: [
       { path: "/", element: <Navigate to="/auth" /> },
       { path: "/auth", exact: true, element: <Auth /> },

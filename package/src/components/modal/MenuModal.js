@@ -118,48 +118,59 @@ const MenuModal = ({ isOpen, toggle, restaurantId }) => {
 
   return (
     <div>
-      <Modal className="modal-lg" isOpen={isOpen} toggle={toggle}>
-        <ModalHeader toggle={toggle}>Menu</ModalHeader>
+      <Modal className="modal-lg" isOpen={isOpen} onClick={toggle}>
+        <ModalHeader>Menu</ModalHeader>
         <ModalBody>
-          <Table>
-            <thead>
-              <tr>
-                <th>Image</th>
-                <th>Type</th>
-                <th>Name</th>
-                <th>Price</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {menuItems.map((item) => (
-                <tr key={item._id}>
-                  <td>
-                    <img
-                      src={item.image.url}
-                      width="100"
-                      height="100"
-                      alt="Menu item"
-                    />
-                  </td>
-                  <td>{item.typeDish}</td>
-                  <td>{item.nameDish}</td>
-                  <td>{item.priceDish}</td>
-                  <td>
-                    <Button
-                      color="primary"
-                      onClick={() => handleMenuEdit(item)}
-                    >
-                      Action
-                    </Button>
-                  </td>
+          {menuItems.length === 0 ? (
+            <p>Menu trống</p>
+          ) : (
+            <Table>
+              <thead>
+                <tr>
+                  <th>Image</th>
+                  <th>Type</th>
+                  <th>Name</th>
+                  <th>Price</th>
+                  <th>Action</th>
                 </tr>
-              ))}
-            </tbody>
-          </Table>
+              </thead>
+              <tbody>
+                {menuItems.map((item) => (
+                  <tr key={item._id}>
+                    <td>
+                      <img
+                        src={item.image.url}
+                        width="100"
+                        height="100"
+                        alt="Menu item"
+                      />
+                    </td>
+                    <td>{item.typeDish}</td>
+                    <td>{item.nameDish}</td>
+                    <td>{item.priceDish}</td>
+                    <td>
+                      <Button
+                        color="primary"
+                        onClick={() => handleMenuEdit(item)}
+                      >
+                        Action
+                      </Button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </Table>
+          )}
         </ModalBody>
         <ModalFooter>
-          <Button color="secondary" onClick={toggle}>
+          <Button
+            color="secondary"
+            onClick={() => {
+              toggle();
+              // Đặt lại dữ liệu về trạng thái rỗng
+              setMenuItems([]);
+            }}
+          >
             Close
           </Button>
         </ModalFooter>

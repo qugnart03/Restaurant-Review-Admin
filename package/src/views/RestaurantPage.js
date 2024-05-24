@@ -1,7 +1,8 @@
+import React, { useEffect } from "react";
 import { Row, Col } from "reactstrap";
 import RestaurantTable from "../components/RestaurantComponent";
-import { useNavigate } from "react-router-dom/dist";
-import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { RestaurantProvider } from "../contexts/RestaurantContext";
 
 const RestaurantPage = () => {
   const navigate = useNavigate();
@@ -15,12 +16,13 @@ const RestaurantPage = () => {
   }, [navigate]);
 
   return (
-    <Row>
-      <Col lg="12">
-        <RestaurantTable />
-      </Col>
-      <Col></Col>
-    </Row>
+    <RestaurantProvider>
+      <Row>
+        <Col lg="12">
+          <RestaurantTable />
+        </Col>
+      </Row>
+    </RestaurantProvider>
   );
 };
 

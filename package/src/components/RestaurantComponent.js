@@ -14,7 +14,7 @@ import {
   Table,
 } from "reactstrap";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import axios from "axios";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -23,9 +23,9 @@ import PlacesAutocomplete, {
   getLatLng,
 } from "react-places-autocomplete";
 import MenuModal from "./modal/MenuModal";
+import { useRestaurants } from "../contexts/RestaurantContext";
 
 const RestaurantTable = () => {
-  const [tableData, setTableData] = useState([]);
   const [modal, setModal] = useState(false);
   const [idRestaurant, setIdRestaurant] = useState(null);
   const [name, setName] = useState("");
@@ -39,73 +39,94 @@ const RestaurantTable = () => {
   const [time, setTime] = useState("");
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 6;
   const [searchTerm, setSearchTerm] = useState("");
 
-  const handleSearch = async (searchTerm) => {
-    try {
-      const { data } = await axios.get(
-        `http://localhost:8080/api/search/restaurant/${searchTerm}`,
-        {
-          withCredentials: true,
-        }
-      );
-      if (data?.restaurants) {
-        console.log(data);
-        setTableData(data.restaurants);
-      } else {
-        setTableData([]);
-      }
-    } catch (error) {
-      console.error("Error searching restaurants:", error);
-    }
-  };
+  const [restaurants, setRestaurants] = useRestaurants();
 
-  useEffect(() => {
-    if (searchTerm.trim() === "") {
-      fetchRestaurants();
-      // setTableData([]);
-    } else {
-      handleSearch(searchTerm);
-    }
-  }, [searchTerm]);
-
-  const fetchRestaurants = async () => {
-    try {
-      const { data } = await axios.get(
-        "http://localhost:8080/api/restaurant/show",
-        {
-          withCredentials: true,
-        }
-      );
-      if (data?.restaurants) {
-        console.log(data);
-        setTableData(data.restaurants);
-      }
-    } catch (error) {
-      console.error("Error fetching restaurants:", error);
-    }
-  };
-
-  useEffect(() => {
-    fetchRestaurants();
-  }, [currentPage]);
+  const [currentRes, setCurrentRes] = useState(restaurants);
+  //--------------------------------------------------------------//
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 6;
 
   const getCurrentItems = () => {
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-    return tableData.slice(indexOfFirstItem, indexOfLastItem);
+    return currentRes.slice(indexOfFirstItem, indexOfLastItem);
   };
+
+  useEffect(() => {
+    setCurrentRes(restaurants);
+  }, [restaurants]);
 
   const goToPage = (page) => {
     setCurrentPage(page);
   };
 
   const pageNumbers = [];
-  for (let i = 1; i <= Math.ceil(tableData.length / itemsPerPage); i++) {
+  for (let i = 1; i <= Math.ceil(currentRes.length / itemsPerPage); i++) {
     pageNumbers.push(i);
   }
+
+  //--------------------------------------------------------------//
+
+  //--------------------------------------------------------------//
+
+  const [initialRes, setInitialRes] = useState([]);
+
+  useEffect(() => {
+    setInitialRes(restaurants);
+  }, [restaurants]);
+
+  const handleSearch = async (searchTerm) => {
+    try {
+      if (!searchTerm.trim()) {
+        setCurrentRes(initialRes);
+        setCurrentPage(1);
+        return;
+      }
+
+      const filteredRestaurants = [...initialRes];
+
+      const filteredResults = filteredRestaurants.filter((restaurant) =>
+        restaurant.name.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+
+      setCurrentRes(filteredResults);
+      setCurrentPage(1);
+    } catch (error) {
+      console.error("Error searching restaurants:", error);
+    }
+  };
+
+  useEffect(() => {
+    handleSearch(searchTerm);
+  }, [searchTerm]);
+
+  //--------------------------------------------------------------//
+
+  //--------------------------------------------------------------//
+
+  const handleDelete = async (id) => {
+    try {
+      await axios.delete(
+        `http://localhost:8080/api/admin/delete/restaurant/${id}`,
+        {
+          withCredentials: true,
+        }
+      );
+
+      setCurrentRes(currentRes.filter((restaurant) => restaurant._id !== id));
+
+      toast.success("Restaurant deleted successfully");
+    } catch (error) {
+      console.error("Error deleting restaurant:", error);
+      toast.error("Error deleting restaurant");
+    }
+  };
+
+  //--------------------------------------------------------------//
+
+  //--------------------------------------------------------------//
 
   const toggleModal = (idRestaurant) => {
     setIdRestaurant(idRestaurant);
@@ -118,60 +139,38 @@ const RestaurantTable = () => {
   };
 
   const loadDataModal = async (idRestaurant) => {
-    try {
-      const { data } = await axios.get(
-        `http://localhost:8080/api/admin/restaurant/${idRestaurant}`,
-        {
-          withCredentials: true,
-        }
-      );
+    const restaurantToEdit = restaurants.find(
+      (restaurant) => restaurant._id === idRestaurant
+    );
 
-      if (data?.success) {
-        const {
-          name,
-          type,
-          phone,
-          description,
-          address,
-          status,
-          timeWork: { start, end },
-          image: { url },
-        } = data.restaurant;
+    if (restaurantToEdit) {
+      const {
+        name,
+        type,
+        phone,
+        description,
+        address,
+        status,
+        timeWork: { start, end },
+        image: { url },
+      } = restaurantToEdit;
 
-        setName(name);
-        setAddress(address);
-        setType(type);
-        setPhone(phone);
-        setDescription(description);
-        setStatus(status);
-        setStartTime(start);
-        setEndTime(end);
-        setUrlImage(url);
-      }
-    } catch (error) {
-      console.error("Error submitting data:", error);
-    }
-  };
-
-  const handleDelete = async (id) => {
-    try {
-      console.log(id);
-      await axios.delete(
-        `http://localhost:8080/api/admin/delete/restaurant/${id}`,
-        {
-          withCredentials: true,
-        }
-      );
-      fetchRestaurants();
-    } catch (error) {
-      console.error("Error deleting restaurant:", error);
+      setName(name);
+      setAddress(address);
+      setType(type);
+      setPhone(phone);
+      setDescription(description);
+      setStatus(status);
+      setStartTime(start);
+      setEndTime(end);
+      setUrlImage(url);
     }
   };
 
   const handleEdit = (idRestaurant) => {
     toggleModal(idRestaurant);
   };
-
+  console.log(restaurants);
   const handleSubmit = async () => {
     if (!name || !type || !phone || !description || !address || !status) {
       console.log("Please fill all the fields");
@@ -196,7 +195,30 @@ const RestaurantTable = () => {
         }
       );
 
-      fetchRestaurants();
+      const updatedRes = [...restaurants];
+
+      const index = updatedRes.findIndex((res) => res._id === idRestaurant);
+      if (index !== -1) {
+        updatedRes[index] = {
+          ...updatedRes[index],
+          name: name,
+          type: type,
+          phone: phone,
+          description: description,
+          address: address,
+          status: status,
+          timeWork: {
+            start: startTime,
+            end: endTime,
+          },
+
+          image: {
+            url: data.url, // Cập nhật đường dẫn hình ảnh mới
+          },
+        };
+
+        console.log(image.url);
+      }
       toggleModalCancel();
     } catch (error) {
       console.error("Error submitting data:", error);
@@ -215,6 +237,8 @@ const RestaurantTable = () => {
 
     reader.readAsDataURL(file);
   };
+
+  //--------------------------------------------------------------//
 
   const handleTimeChange = (e) => {
     const { id, value } = e.target;
@@ -243,19 +267,17 @@ const RestaurantTable = () => {
 
   const handleMenuButtonClick = async (restaurantId) => {
     try {
-      const { data } = await axios.get(
-        `http://localhost:8080/api/restaurant/${restaurantId}/menus`,
-        {
-          withCredentials: true,
-        }
+      const restaurant = restaurants.find(
+        (restaurant) => restaurant._id === restaurantId
       );
-      if (!data.items.length <= 0) {
+
+      if (restaurant) {
         setSelectedRestaurantId(restaurantId);
         toggleMenuModal();
       }
     } catch (error) {
       console.error("Error fetching restaurant menus:", error);
-      toast.warn("No menus available for this restaurant");
+      toast.error("Error fetching restaurant menus");
     }
   };
 
@@ -329,12 +351,6 @@ const RestaurantTable = () => {
                     >
                       Menu
                     </Button>
-
-                    <MenuModal
-                      isOpen={isMenuModalOpen}
-                      toggle={toggleMenuModal}
-                      restaurantId={selectedRestaurantId}
-                    />
                   </td>
                   <td
                     style={{
@@ -393,7 +409,7 @@ const RestaurantTable = () => {
               {/* Next Page Button */}
               <li
                 className={`page-item ${
-                  currentPage === Math.ceil(tableData.length / itemsPerPage)
+                  currentPage === Math.ceil(currentRes.length / itemsPerPage)
                     ? "disabled"
                     : ""
                 }`}
@@ -599,6 +615,12 @@ const RestaurantTable = () => {
           </Button>
         </ModalFooter>
       </Modal>
+
+      <MenuModal
+        isOpen={isMenuModalOpen}
+        toggle={toggleMenuModal}
+        restaurantId={selectedRestaurantId}
+      />
     </div>
   );
 };
