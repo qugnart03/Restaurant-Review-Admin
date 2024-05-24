@@ -122,7 +122,6 @@ const MenuModal = ({ isOpen, toggle, restaurantId }) => {
 
   return (
     <div>
-      <ToastContainer />
       <Modal className="modal-lg" isOpen={isOpen} onClick={toggle}>
         <ModalHeader>Menu</ModalHeader>
         <ModalBody>

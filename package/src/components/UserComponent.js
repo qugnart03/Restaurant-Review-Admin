@@ -178,6 +178,7 @@ const UserComponent = () => {
           name: name,
           phone: phone,
           role: role,
+          image: { url: urlImage },
         };
       }
 

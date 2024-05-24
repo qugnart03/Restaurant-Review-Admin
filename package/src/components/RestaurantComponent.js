@@ -135,12 +135,10 @@ const RestaurantTable = () => {
   //--------------------------------------------------------------//
 
   const toggleModal = (idRestaurant) => {
-    setIdRestaurant(idRestaurant);
-    setModal(!modal);
-    loadDataModal(idRestaurant);
-  };
-
-  const toggleModalCancel = () => {
+    if (idRestaurant) {
+      setIdRestaurant(idRestaurant);
+      loadDataModal(idRestaurant);
+    }
     setModal(!modal);
   };
 
@@ -199,24 +197,23 @@ const RestaurantTable = () => {
         }
       );
 
-      const updatedRes = [...restaurants];
+      const updatedRes = restaurants.map((res) =>
+        res._id === idRestaurant
+          ? {
+              ...res,
+              name: name,
+              type: type,
+              phone: phone,
+              description: description,
+              address: address,
+              timeWork: { start: startTime, end: endTime },
+              image: { ...res.image, url: urlImage },
+            }
+          : res
+      );
 
-      const index = updatedRes.findIndex((res) => res._id === idRestaurant);
-      if (index !== -1) {
-        updatedRes[index] = {
-          ...updatedRes[index],
-          name: name,
-          type: type,
-          phone: phone,
-          description: description,
-          address: address,
-          timeWork: {
-            start: startTime,
-            end: endTime,
-          },
-        };
-      }
-      toggleModalCancel();
+      setRestaurants(updatedRes);
+      setModal(false);
 
       toast.success("Update " + name + " success");
     } catch (error) {
@@ -281,7 +278,6 @@ const RestaurantTable = () => {
 
   return (
     <div>
-      <ToastContainer />
       <Card>
         <CardBody>
           <CardTitle tag="h5">Restaurant Listing</CardTitle>
@@ -425,8 +421,8 @@ const RestaurantTable = () => {
       </Card>
 
       {/* MODAL EDIT */}
-      <Modal isOpen={modal} toggle={toggleModalCancel} className="modal-xl">
-        <ModalHeader toggle={toggleModalCancel}>
+      <Modal isOpen={modal} toggle={toggleModal} className="modal-xl">
+        <ModalHeader toggle={toggleModal}>
           <i className="bi bi-gear me-2"></i>
           Edit Restaurant
         </ModalHeader>
@@ -582,7 +578,7 @@ const RestaurantTable = () => {
           <Button color="primary" onClick={handleSubmit}>
             Submit
           </Button>
-          <Button color="secondary" onClick={toggleModalCancel}>
+          <Button color="secondary" onClick={toggleModal}>
             Cancel
           </Button>
         </ModalFooter>
@@ -593,6 +589,8 @@ const RestaurantTable = () => {
         toggle={toggleMenuModal}
         restaurantId={selectedRestaurantId}
       />
+
+      <ToastContainer />
     </div>
   );
 };
